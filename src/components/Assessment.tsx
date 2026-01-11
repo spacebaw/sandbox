@@ -89,27 +89,27 @@ export default function Assessment({ onComplete }: AssessmentProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-louisiana-blue to-blue-900 p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
       <div className="max-w-3xl w-full">
         {/* Progress bar */}
         <div className="mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className={`w-3 h-3 rounded-full ${step >= 1 ? 'bg-louisiana-gold' : 'bg-blue-300'}`} />
-            <div className="w-12 h-1 bg-blue-300" />
-            <div className={`w-3 h-3 rounded-full ${step >= 2 ? 'bg-louisiana-gold' : 'bg-blue-300'}`} />
-            <div className="w-12 h-1 bg-blue-300" />
-            <div className={`w-3 h-3 rounded-full ${step >= 3 ? 'bg-louisiana-gold' : 'bg-blue-300'}`} />
+            <div className={`w-3 h-3 rounded-full transition-colors ${step >= 1 ? 'bg-primary' : 'bg-gray-300'}`} />
+            <div className={`w-12 h-1 transition-colors ${step >= 2 ? 'bg-primary' : 'bg-gray-300'}`} />
+            <div className={`w-3 h-3 rounded-full transition-colors ${step >= 2 ? 'bg-primary' : 'bg-gray-300'}`} />
+            <div className={`w-12 h-1 transition-colors ${step >= 3 ? 'bg-primary' : 'bg-gray-300'}`} />
+            <div className={`w-3 h-3 rounded-full transition-colors ${step >= 3 ? 'bg-primary' : 'bg-gray-300'}`} />
           </div>
-          <p className="text-center text-blue-200 text-sm">Step {step} of 3</p>
+          <p className="text-center text-gray-600 text-sm">Step {step} of 3</p>
         </div>
 
         {/* Step 1: Business Stage */}
         {step === 1 && (
           <div className="animate-fade-in">
-            <h2 className="text-3xl font-bold text-white mb-3 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
               Where are you in your business journey?
             </h2>
-            <p className="text-blue-200 text-center mb-8">
+            <p className="text-gray-600 text-center mb-8">
               This helps us provide the most relevant guidance for your situation
             </p>
             <div className="space-y-3">
@@ -117,18 +117,20 @@ export default function Assessment({ onComplete }: AssessmentProps) {
                 <button
                   key={stage.value}
                   onClick={() => handleStageSelect(stage.value)}
-                  className="w-full bg-white hover:bg-blue-50 rounded-lg p-5 flex items-center justify-between transition-all transform hover:scale-102 shadow-lg group"
+                  className="w-full bg-white hover:bg-gray-50 rounded-lg p-5 flex items-center justify-between transition-all shadow-material-1 hover:shadow-material-2 group border border-gray-200"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="text-louisiana-blue group-hover:text-louisiana-gold transition-colors">
-                      {stage.icon}
+                    <div className="w-12 h-12 bg-primary-light rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
+                      <div className="text-primary group-hover:text-white transition-colors">
+                        {stage.icon}
+                      </div>
                     </div>
                     <div className="text-left">
                       <div className="font-semibold text-gray-900">{stage.label}</div>
                       <div className="text-sm text-gray-600">{stage.description}</div>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-louisiana-blue" />
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-primary transition-colors" />
                 </button>
               ))}
             </div>
@@ -138,10 +140,10 @@ export default function Assessment({ onComplete }: AssessmentProps) {
         {/* Step 2: Industry */}
         {step === 2 && (
           <div className="animate-fade-in">
-            <h2 className="text-3xl font-bold text-white mb-3 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
               What industry is your business in?
             </h2>
-            <p className="text-blue-200 text-center mb-8">
+            <p className="text-gray-600 text-center mb-8">
               This helps us provide industry-specific resources and advice
             </p>
             <div className="grid grid-cols-2 gap-3">
@@ -149,7 +151,7 @@ export default function Assessment({ onComplete }: AssessmentProps) {
                 <button
                   key={industry}
                   onClick={() => handleIndustrySelect(industry)}
-                  className="bg-white hover:bg-blue-50 rounded-lg p-4 font-semibold text-gray-900 transition-all transform hover:scale-105 shadow-lg"
+                  className="bg-white hover:bg-primary hover:text-white rounded-lg p-4 font-semibold text-gray-900 transition-all shadow-material-1 hover:shadow-material-2 border border-gray-200"
                 >
                   {industry}
                 </button>
@@ -157,7 +159,7 @@ export default function Assessment({ onComplete }: AssessmentProps) {
             </div>
             <button
               onClick={() => setStep(1)}
-              className="mt-6 text-blue-200 hover:text-white underline mx-auto block"
+              className="mt-6 text-primary hover:text-primary-dark underline mx-auto block font-medium"
             >
               ← Go back
             </button>
@@ -167,10 +169,10 @@ export default function Assessment({ onComplete }: AssessmentProps) {
         {/* Step 3: Main Challenge */}
         {step === 3 && (
           <div className="animate-fade-in">
-            <h2 className="text-3xl font-bold text-white mb-3 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
               What's your biggest challenge right now?
             </h2>
-            <p className="text-blue-200 text-center mb-8">
+            <p className="text-gray-600 text-center mb-8">
               We'll prioritize helping you with this first
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -178,7 +180,7 @@ export default function Assessment({ onComplete }: AssessmentProps) {
                 <button
                   key={challenge}
                   onClick={() => handleChallengeSelect(challenge)}
-                  className="bg-white hover:bg-blue-50 rounded-lg p-4 font-semibold text-gray-900 transition-all transform hover:scale-105 shadow-lg text-left"
+                  className="bg-white hover:bg-primary hover:text-white rounded-lg p-4 font-semibold text-gray-900 transition-all shadow-material-1 hover:shadow-material-2 text-left border border-gray-200"
                 >
                   {challenge}
                 </button>
@@ -186,7 +188,7 @@ export default function Assessment({ onComplete }: AssessmentProps) {
             </div>
             <button
               onClick={() => setStep(2)}
-              className="mt-6 text-blue-200 hover:text-white underline mx-auto block"
+              className="mt-6 text-primary hover:text-primary-dark underline mx-auto block font-medium"
             >
               ← Go back
             </button>
