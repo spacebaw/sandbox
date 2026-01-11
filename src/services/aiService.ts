@@ -1,16 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
 import { AssessmentAnswers, BusinessStage } from '../types';
 
-const API_KEY = import.meta.env.VITE_ANTHROPIC_API_KEY;
-
-// Initialize Anthropic client (will be null if no API key)
-let anthropic: Anthropic | null = null;
-if (API_KEY) {
-  anthropic = new Anthropic({
-    apiKey: API_KEY,
-    dangerouslyAllowBrowser: true // Note: In production, use a backend proxy
-  });
-}
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 const stageDescriptions: Record<BusinessStage, string> = {
   idea: "exploring a business idea and considering starting a business",
@@ -25,11 +15,6 @@ export async function sendMessage(
   conversationHistory: { role: 'user' | 'assistant'; content: string }[],
   assessmentAnswers: AssessmentAnswers
 ): Promise<string> {
-  // If no API key, return a helpful mock response
-  if (!anthropic) {
-    return getMockResponse(userMessage, assessmentAnswers);
-  }
-
   try {
     // Build system prompt with Louisiana context and assessment info
     const systemPrompt = buildSystemPrompt(assessmentAnswers);
@@ -40,31 +25,47 @@ export async function sendMessage(
       { role: 'user' as const, content: userMessage }
     ];
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
-      system: systemPrompt,
-      messages: messages
+    // Call backend API
+    const response = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages,
+        systemPrompt
+      })
     });
 
-    const textContent = response.content.find(block => block.type === 'text');
-    return textContent ? textContent.text : 'I apologize, but I had trouble generating a response. Please try again.';
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        return 'API Key Error: The API key configured on the server appears to be invalid. Please check the server/.env file.';
+      }
+      if (response.status === 429) {
+        return 'Rate Limit: API usage limits exceeded. Please wait a moment and try again.';
+      }
+      if (response.status === 500 && errorData.error?.includes('not configured')) {
+        return getMockResponse(userMessage, assessmentAnswers);
+      }
+
+      throw new Error(errorData.error || `Server error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.message || 'I apologize, but I had trouble generating a response. Please try again.';
+
   } catch (error: any) {
-    console.error('Error calling Claude API:', error);
-    console.error('Error details:', error.message, error.status, error.error);
+    console.error('Error calling backend API:', error);
 
-    // Provide more specific error messages
-    if (error.status === 401) {
-      return 'API Key Error: Your API key appears to be invalid. Please check that you copied it correctly from https://console.anthropic.com/';
-    }
-    if (error.status === 429) {
-      return 'Rate Limit: You\'ve exceeded your API usage limits. Please wait a moment and try again.';
-    }
-    if (error.message?.includes('fetch')) {
-      return 'Network Error: Could not connect to the API. Please check your internet connection.';
+    // If backend is not running, use mock responses
+    if (error.message?.includes('fetch') || error.message?.includes('NetworkError')) {
+      console.warn('Backend server not running, using mock responses');
+      return getMockResponse(userMessage, assessmentAnswers);
     }
 
-    return `I apologize, but I encountered an error: ${error.message || 'Unknown error'}. Please check your API key configuration and try again.`;
+    return `I apologize, but I encountered an error: ${error.message || 'Unknown error'}. Please make sure the backend server is running.`;
   }
 }
 
@@ -93,7 +94,7 @@ Guidelines for your responses:
 Remember: Your goal is to empower Louisiana small business owners with knowledge and confidence to succeed.`;
 }
 
-// Mock response for when no API key is configured
+// Mock response for when backend is not available
 function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswers): string {
   const lowerMessage = userMessage.toLowerCase();
 
@@ -116,7 +117,7 @@ function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswe
 
 Would you like me to dive deeper into any specific section of the business plan?
 
-*Note: Configure your Claude API key in the .env file for full AI-powered responses.*`;
+*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
   }
 
   if (lowerMessage.includes('funding') || lowerMessage.includes('loan') || lowerMessage.includes('money')) {
@@ -139,15 +140,39 @@ Would you like me to dive deeper into any specific section of the business plan?
 
 The best option depends on your specific needs, business stage, and financial situation. Would you like more details on any of these?
 
-*Note: Configure your Claude API key in the .env file for full AI-powered responses.*`;
+*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+  }
+
+  if (lowerMessage.includes('license') || lowerMessage.includes('permit') || lowerMessage.includes('register')) {
+    return `Here's what you need to know about business registration and licensing in Louisiana:
+
+**Business Registration:**
+1. **Choose your business structure** (LLC, Corporation, Sole Proprietorship, etc.)
+2. **Register with Louisiana Secretary of State** at https://www.sos.la.gov/BusinessServices
+3. **Get an EIN (Employer Identification Number)** from the IRS
+4. **Register for Louisiana taxes** with the Department of Revenue
+
+**Licenses & Permits:**
+- **Local business license** - Check with your city/parish
+- **Professional licenses** - If required for your industry
+- **Sales tax permit** - If selling products
+- **Health permits** - For food service businesses
+- **Special permits** - Industry-specific (construction, alcohol, etc.)
+
+**Resources:**
+- Louisiana Secretary of State: https://www.sos.la.gov/
+- Louisiana Department of Revenue: https://revenue.louisiana.gov/
+- Your local city hall or parish clerk's office
+
+Each business is different, so I recommend checking with the Louisiana Small Business Development Center (LSBDC) for personalized guidance.
+
+*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
   }
 
   // Generic helpful response
   return `Thank you for your question! I'm here to help Louisiana small business owners like you succeed.
 
-Since this is running in demo mode, I'm providing general guidance. To get personalized, AI-powered responses tailored specifically to your situation, please add your Claude API key to the .env file.
-
-**In the meantime, here are some general tips for ${assessmentAnswers.stage || 'your stage'}:**
+**For your ${assessmentAnswers.industry || 'business'} at the ${assessmentAnswers.stage || 'current'} stage:**
 
 ${assessmentAnswers.stage === 'idea' ? `
 - Validate your idea by talking to potential customers
@@ -172,5 +197,23 @@ ${assessmentAnswers.stage === 'established' ? `
 - Invest in employee development
 ` : ''}
 
-Is there a specific aspect of your business challenge (${assessmentAnswers.mainChallenge || 'your main concern'}) you'd like to discuss?`;
+${assessmentAnswers.stage === 'growth' ? `
+- Develop a strategic growth plan
+- Explore financing options for expansion
+- Consider hiring key team members
+- Invest in marketing and brand building
+- Look into scaling your operations
+` : ''}
+
+${assessmentAnswers.stage === 'transition' ? `
+- Plan your transition carefully with professional advisors
+- Document all business processes and systems
+- Consider tax implications of major changes
+- Communicate clearly with stakeholders
+- Seek guidance from experienced mentors
+` : ''}
+
+**Regarding "${assessmentAnswers.mainChallenge}":** This is a common challenge for businesses at your stage. I'd be happy to provide more specific guidance - could you tell me more about your specific situation?
+
+*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
 }
