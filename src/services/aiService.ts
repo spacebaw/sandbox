@@ -1,6 +1,7 @@
 import { AssessmentAnswers, BusinessStage } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+// Use relative URL in development (Vite proxy) or absolute URL in production
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 const stageDescriptions: Record<BusinessStage, string> = {
   idea: "exploring a business idea and considering starting a business",
