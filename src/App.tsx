@@ -109,13 +109,13 @@ function App() {
     : [];
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-white">
       {/* Header */}
-      <header className="bg-louisiana-blue text-white shadow-lg">
+      <header className="bg-white border-b border-gray-200 shadow-material-1">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Louisiana Business Assistant</h1>
-            <p className="text-blue-200 text-sm">
+            <h1 className="text-2xl font-bold text-gray-900">Louisiana Business Assistant</h1>
+            <p className="text-gray-600 text-sm">
               {assessmentAnswers?.stage && (
                 <>Stage: {assessmentAnswers.stage.charAt(0).toUpperCase() + assessmentAnswers.stage.slice(1)}</>
               )}
@@ -125,14 +125,14 @@ function App() {
           <div className="flex space-x-2">
             <button
               onClick={() => setShowResources(true)}
-              className="bg-louisiana-gold hover:bg-yellow-500 text-louisiana-blue font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              className="bg-accent hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-all shadow-material-1 hover:shadow-material-2 flex items-center space-x-2"
             >
               <BookOpen className="w-5 h-5" />
               <span>Resources</span>
             </button>
             <button
               onClick={handleReset}
-              className="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-4 py-2 rounded-lg transition-colors flex items-center space-x-2"
+              className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-lg transition-all border border-gray-300 shadow-material-1 hover:shadow-material-2 flex items-center space-x-2"
             >
               <RotateCcw className="w-4 h-4" />
               <span>Start Over</span>
@@ -142,18 +142,18 @@ function App() {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden bg-gray-50">
         <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row">
           {/* Left sidebar - Prompt options (hidden on mobile when there are messages) */}
-          <div className={`lg:w-96 bg-gray-50 border-r-2 border-gray-200 p-4 overflow-y-auto ${messages.length > 1 ? 'hidden lg:block' : ''}`}>
+          <div className={`lg:w-96 bg-white border-r border-gray-200 p-4 overflow-y-auto ${messages.length > 1 ? 'hidden lg:block' : ''}`}>
             <PromptOptions
               options={promptOptions}
               onSelectPrompt={handleSelectPrompt}
             />
 
             {/* Quick tips */}
-            <div className="mt-6 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-louisiana-blue mb-2">💡 Quick Tips</h4>
+            <div className="mt-6 bg-primary-light rounded-lg p-4 border border-primary/20">
+              <h4 className="font-semibold text-primary-dark mb-2">💡 Quick Tips</h4>
               <ul className="text-sm text-gray-700 space-y-2">
                 <li>• Ask questions in your own words</li>
                 <li>• Be specific about your situation</li>
@@ -164,7 +164,7 @@ function App() {
           </div>
 
           {/* Chat area */}
-          <div className="flex-1 flex flex-col bg-gray-100">
+          <div className="flex-1 flex flex-col bg-gray-50">
             <ChatInterface
               messages={messages}
               onSendMessage={handleSendMessage}
