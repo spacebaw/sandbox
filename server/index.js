@@ -44,8 +44,9 @@ app.post('/api/chat', async (req, res) => {
     }
 
     // Call Claude API
+    // Using Claude 3 Sonnet (most widely available model)
     const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20240620',
+      model: 'claude-3-sonnet-20240229',
       max_tokens: 2048,
       system: systemPrompt,
       messages: messages,
