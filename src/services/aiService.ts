@@ -49,9 +49,22 @@ export async function sendMessage(
 
     const textContent = response.content.find(block => block.type === 'text');
     return textContent ? textContent.text : 'I apologize, but I had trouble generating a response. Please try again.';
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error calling Claude API:', error);
-    return 'I apologize, but I encountered an error. Please check your API key configuration and try again.';
+    console.error('Error details:', error.message, error.status, error.error);
+
+    // Provide more specific error messages
+    if (error.status === 401) {
+      return 'API Key Error: Your API key appears to be invalid. Please check that you copied it correctly from https://console.anthropic.com/';
+    }
+    if (error.status === 429) {
+      return 'Rate Limit: You\'ve exceeded your API usage limits. Please wait a moment and try again.';
+    }
+    if (error.message?.includes('fetch')) {
+      return 'Network Error: Could not connect to the API. Please check your internet connection.';
+    }
+
+    return `I apologize, but I encountered an error: ${error.message || 'Unknown error'}. Please check your API key configuration and try again.`;
   }
 }
 
