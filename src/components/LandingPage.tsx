@@ -127,16 +127,14 @@ export default function LandingPage({ onContinue }: LandingPageProps) {
                     whileFocus={{ scale: 1.02 }}
                     className="w-full px-8 py-6 text-2xl text-gray-800 bg-white rounded-2xl shadow-2xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-200 transition-all placeholder-gray-400"
                   />
-                  <motion.button
+                  <button
                     type="submit"
                     disabled={!input.trim()}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 active:shadow-md"
                   >
                     <Zap className="w-5 h-5" />
                     <span>Create Magic</span>
-                  </motion.button>
+                  </button>
                 </div>
               </motion.form>
 
