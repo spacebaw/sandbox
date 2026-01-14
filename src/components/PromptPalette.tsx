@@ -8,8 +8,7 @@ import {
   TrendingUp,
   Mail,
   X,
-  Download,
-  Sparkles
+  Download
 } from 'lucide-react';
 
 interface PromptAction {
@@ -387,7 +386,7 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 p-4">
+    <div className="min-h-screen bg-white p-4">
       <div className="max-w-6xl mx-auto py-8">
         {/* Header */}
         <motion.div
@@ -395,13 +394,13 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
         >
-          <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Your Business Command Center
+          <h1 className="text-4xl font-semibold mb-2 text-gray-900">
+            What would you like to create?
           </h1>
           <p className="text-gray-600">
-            Click any button to instantly generate what you need
+            Choose a document to generate instantly
           </p>
-          <div className="mt-4 inline-block bg-white rounded-full px-6 py-2 shadow-lg">
+          <div className="mt-4 inline-block bg-gray-50 border border-gray-200 rounded-full px-6 py-2">
             <span className="text-sm text-gray-600">
               {businessInfo.type} in {businessInfo.city}
             </span>
@@ -418,22 +417,17 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
           {promptActions.map((action, index) => (
             <motion.button
               key={action.id}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              whileTap={{ scale: 0.95 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => handleActionClick(action)}
-              className={`relative bg-gradient-to-br ${action.color} hover:${action.hoverColor} text-white rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all group overflow-hidden`}
+              className="text-left bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-xl p-6 transition-all"
             >
-              {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transform -skew-x-12 group-hover:translate-x-full transition-all duration-1000" />
-
-              <div className="relative z-10">
-                <div className="mb-4">{action.icon}</div>
-                <h3 className="text-xl font-bold mb-2">{action.title}</h3>
-                <p className="text-sm opacity-90">{action.description}</p>
-              </div>
+              <div className="mb-3 text-gray-700">{action.icon}</div>
+              <h3 className="text-lg font-semibold mb-1 text-gray-900">{action.title}</h3>
+              <p className="text-sm text-gray-600">{action.description}</p>
             </motion.button>
           ))}
         </motion.div>
@@ -452,18 +446,19 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
                 animate={{ scale: 1 }}
                 className="bg-white rounded-2xl p-8 shadow-2xl text-center"
               >
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                  className="w-16 h-16 mx-auto mb-4"
-                >
-                  <Sparkles className="w-16 h-16 text-purple-600" />
-                </motion.div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Generating Your Document...
+                <div className="w-16 h-16 mx-auto mb-4 bg-gray-900 rounded-full flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <FileText className="w-8 h-8 text-white" />
+                  </motion.div>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  Generating document...
                 </h3>
                 <p className="text-gray-600">
-                  Customizing for Louisiana businesses
+                  Customized for Louisiana businesses
                 </p>
               </motion.div>
             </motion.div>
@@ -488,7 +483,7 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
                 className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 max-h-[90vh] overflow-hidden flex flex-col"
               >
                 {/* Modal header */}
-                <div className={`bg-gradient-to-r ${selectedAction.color} text-white p-6 flex items-center justify-between`}>
+                <div className="bg-gray-900 text-white p-6 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     {selectedAction.icon}
                     <div>
@@ -519,23 +514,19 @@ export default function PromptPalette({ businessInfo }: PromptPaletteProps) {
                     This document is customized for your Louisiana business
                   </p>
                   <div className="flex space-x-3">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    <button
                       onClick={handleDownload}
-                      className="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors flex items-center space-x-2 shadow-lg"
+                      className="bg-gray-900 hover:bg-gray-800 text-white font-medium px-6 py-2 rounded-lg transition-colors flex items-center space-x-2"
                     >
                       <Download className="w-5 h-5" />
                       <span>Download</span>
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                    </button>
+                    <button
                       onClick={() => setSelectedAction(null)}
-                      className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold px-6 py-2 rounded-lg transition-colors"
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-6 py-2 rounded-lg transition-colors"
                     >
                       Close
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </motion.div>
