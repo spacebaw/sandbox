@@ -1,11 +1,20 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MagicCard from './MagicCard';
-import { Sparkles, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 interface LandingPageProps {
   onContinue: (businessType: string, city: string) => void;
 }
+
+const goalButtons = [
+  { id: 'start', label: 'Start a Business', prompt: 'I want to start a business in Louisiana' },
+  { id: 'grow', label: 'Grow Revenue', prompt: 'I want to grow my business revenue' },
+  { id: 'funding', label: 'Get Funding', prompt: 'I need help securing funding for my business' },
+  { id: 'compliance', label: 'Navigate Compliance', prompt: 'I need help with Louisiana business compliance' },
+  { id: 'marketing', label: 'Improve Marketing', prompt: 'I want to improve my marketing strategy' },
+  { id: 'operations', label: 'Optimize Operations', prompt: 'I want to optimize my business operations' }
+];
 
 export default function LandingPage({ onContinue }: LandingPageProps) {
   const [input, setInput] = useState('');
@@ -60,6 +69,10 @@ export default function LandingPage({ onContinue }: LandingPageProps) {
     }
   };
 
+  const handleGoalClick = (prompt: string) => {
+    setInput(prompt);
+  };
+
   const handleContinue = () => {
     if (parsedData) {
       onContinue(parsedData.businessType, parsedData.city);
@@ -67,128 +80,105 @@ export default function LandingPage({ onContinue }: LandingPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-yellow-50 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="max-w-3xl w-full">
         <AnimatePresence mode="wait">
           {!showMagicCard ? (
             <motion.div
               key="input"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{ duration: 0.5 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
               className="text-center"
             >
-              {/* Logo/Icon */}
+              {/* Logo orb */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-                className="mb-8 flex justify-center"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="mb-12 flex justify-center"
               >
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center shadow-2xl">
-                  <Sparkles className="w-10 h-10 text-white" />
-                </div>
+                <div className="w-16 h-16 bg-gradient-to-b from-green-400 to-green-100 rounded-full shadow-lg" />
               </motion.div>
 
-              {/* Headline */}
+              {/* Greeting */}
               <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-purple-600 via-pink-600 to-yellow-600 bg-clip-text text-transparent"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-4xl md:text-5xl font-semibold mb-4 text-gray-900"
               >
-                Louisiana Business Magic
+                Good evening
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-xl text-gray-700 mb-12 max-w-2xl mx-auto"
+                transition={{ delay: 0.3 }}
+                className="text-xl text-gray-600 mb-12"
               >
-                Tell us your dream, and watch the magic happen
+                How can I help you with your Louisiana business?
               </motion.p>
 
-              {/* Magic Input Form */}
-              <motion.form
-                onSubmit={handleSubmit}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mb-8"
-              >
-                <div className="relative max-w-3xl mx-auto">
-                  <motion.input
-                    type="text"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="I want to start a coffee shop in Lafayette..."
-                    whileFocus={{ scale: 1.02 }}
-                    className="w-full px-8 py-6 text-2xl text-gray-800 bg-white rounded-2xl shadow-2xl border-2 border-purple-200 focus:border-purple-500 focus:outline-none focus:ring-4 focus:ring-purple-200 transition-all placeholder-gray-400"
-                  />
-                  <button
-                    type="submit"
-                    disabled={!input.trim()}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 active:shadow-md"
-                  >
-                    <Zap className="w-5 h-5" />
-                    <span>Create Magic</span>
-                  </button>
-                </div>
-              </motion.form>
-
-              {/* Example prompts */}
+              {/* Goal buttons */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-                className="max-w-2xl mx-auto"
+                transition={{ delay: 0.4 }}
+                className="mb-8"
               >
-                <p className="text-sm text-gray-600 mb-3">Try these examples:</p>
-                <div className="flex flex-wrap justify-center gap-2">
-                  {[
-                    'a bakery in New Orleans',
-                    'a tech startup in Baton Rouge',
-                    'a consulting firm in Shreveport',
-                    'a boutique in Lafayette'
-                  ].map((example, index) => (
+                <p className="text-sm text-gray-500 mb-4">Choose a goal or write your own</p>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+                  {goalButtons.map((goal, index) => (
                     <motion.button
-                      key={example}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.7 + index * 0.1 }}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setInput(`I want to start ${example}`)}
-                      className="px-4 py-2 bg-white hover:bg-purple-50 border border-purple-200 rounded-lg text-sm text-gray-700 transition-all shadow-sm hover:shadow-md"
+                      key={goal.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5 + index * 0.05 }}
+                      onClick={() => handleGoalClick(goal.prompt)}
+                      className="px-4 py-3 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl text-sm text-gray-700 transition-all text-left"
                     >
-                      {example}
+                      {goal.label}
                     </motion.button>
                   ))}
                 </div>
               </motion.div>
 
-              {/* Trust indicators */}
-              <motion.div
+              {/* Input form */}
+              <motion.form
+                onSubmit={handleSubmit}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.8 }}
-                className="mt-12 flex items-center justify-center space-x-6 text-sm text-gray-600"
+                transition={{ delay: 0.6 }}
               >
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span>AI-Powered</span>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="How can I help you today?"
+                    className="w-full px-6 py-4 pr-14 text-base text-gray-900 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:border-gray-300 transition-colors placeholder-gray-400"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!input.trim()}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 bg-gray-900 hover:bg-gray-800 disabled:bg-gray-200 disabled:cursor-not-allowed rounded-lg transition-colors"
+                  >
+                    <ArrowRight className="w-5 h-5 text-white" />
+                  </button>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span>Louisiana-Specific</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  <span>Free to Use</span>
-                </div>
-              </motion.div>
+              </motion.form>
+
+              {/* Footer note */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                className="mt-8 text-xs text-gray-400"
+              >
+                Louisiana Business Assistant can make mistakes. Please verify important information.
+              </motion.p>
             </motion.div>
           ) : (
             <motion.div
