@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
-import { GamificationProvider } from './contexts/GamificationContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LandingPage from './components/LandingPage';
-import FogOfWar from './components/FogOfWar';
-import PromptPalette from './components/PromptPalette';
+import ChatInterface from './components/ChatInterface';
 import ResourcesPanel from './components/ResourcesPanel';
 import LoginModal from './components/LoginModal';
 import LeftSidebar from './components/LeftSidebar';
 import { louisianaResources } from './data/resources';
+import { Message } from './types';
+import { sendMessage } from './services/aiService';
 import { RotateCcw, BookOpen } from 'lucide-react';
 
-type AppState = 'landing' | 'assessment' | 'palette';
+type AppState = 'landing' | 'chat';
 
 function AppContent() {
   const [appState, setAppState] = useState<AppState>('landing');
   const [businessInfo, setBusinessInfo] = useState<{ type: string; city: string } | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
@@ -33,9 +35,9 @@ function AppContent() {
     }
   }, [showLoginPrompt]);
 
-  const handleLandingContinue = (businessType: string, city: string) => {
+  const handleLandingContinue = async (businessType: string, city: string, initialQuery?: string) => {
     setBusinessInfo({ type: businessType, city });
-    setAppState('assessment');
+    setAppState('chat');
     incrementInteractions(); // Track interaction
 
     // Save as project if authenticated
@@ -46,17 +48,72 @@ function AppContent() {
         city
       });
     }
+
+    // If there's an initial query, send it immediately
+    if (initialQuery) {
+      await handleSendMessage(initialQuery, businessType);
+    }
   };
 
-  const handleAssessmentComplete = () => {
-    setAppState('palette');
-    incrementInteractions(); // Track interaction
+  const handleSendMessage = async (content: string, businessType?: string) => {
+    const bizType = businessType || businessInfo?.type || 'business';
+
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      // Build conversation history
+      const conversationHistory = messages.map(m => ({
+        role: m.role,
+        content: m.content
+      }));
+
+      // Create assessment answers for context
+      const assessmentAnswers = {
+        stage: 'idea' as const,
+        industry: bizType,
+        mainChallenge: content,
+        hasBusinessPlan: null
+      };
+
+      // Get AI response
+      const responseText = await sendMessage(content, conversationHistory, assessmentAnswers);
+
+      // Add assistant message
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseText,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMessage]);
+      incrementInteractions(); // Track interaction
+    } catch (error) {
+      console.error('Error sending message:', error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I apologize, but I encountered an error processing your message. Please try again.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
     if (confirm('Are you sure you want to start over?')) {
       setAppState('landing');
       setBusinessInfo(null);
+      setMessages([]);
       setShowResources(false);
     }
   };
@@ -73,46 +130,55 @@ function AppContent() {
 
       {/* Main content */}
       <div className="flex-1 overflow-auto">
-        <GamificationProvider>
-          {appState === 'landing' && (
-            <LandingPage onContinue={handleLandingContinue} />
-          )}
+        {appState === 'landing' && (
+          <LandingPage onContinue={handleLandingContinue} />
+        )}
 
-          {appState === 'assessment' && (
-            <FogOfWar onComplete={handleAssessmentComplete} />
-          )}
-
-          {appState === 'palette' && businessInfo && (
-            <div className="relative min-h-screen">
-              {/* Header with reset button */}
-              <div className="absolute top-4 right-4 z-10 flex space-x-2">
+        {appState === 'chat' && (
+          <div className="h-full flex flex-col">
+            {/* Header with reset button */}
+            <div className="border-b border-gray-200 p-4 bg-white flex items-center justify-between">
+              <div>
+                <h2 className="font-semibold text-gray-900">Louisiana Business Assistant</h2>
+                {businessInfo && (
+                  <p className="text-sm text-gray-600">{businessInfo.type} in {businessInfo.city}</p>
+                )}
+              </div>
+              <div className="flex space-x-2">
                 <button
                   onClick={() => setShowResources(true)}
-                  className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-lg transition-all border border-gray-300 shadow-lg flex items-center space-x-2"
+                  className="bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg transition-all border border-gray-200 flex items-center space-x-2"
                 >
-                  <BookOpen className="w-5 h-5" />
-                  <span>Resources</span>
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden md:inline">Resources</span>
                 </button>
                 <button
                   onClick={handleReset}
-                  className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-lg transition-all border border-gray-300 shadow-lg flex items-center space-x-2"
+                  className="bg-white hover:bg-gray-50 text-gray-700 font-medium px-4 py-2 rounded-lg transition-all border border-gray-200 flex items-center space-x-2"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  <span>Start Over</span>
+                  <span className="hidden md:inline">Start Over</span>
                 </button>
               </div>
+            </div>
 
-              <PromptPalette businessInfo={businessInfo} />
-
-              {/* Resources panel */}
-              <ResourcesPanel
-                resources={louisianaResources}
-                isOpen={showResources}
-                onClose={() => setShowResources(false)}
+            {/* Chat interface */}
+            <div className="flex-1">
+              <ChatInterface
+                messages={messages}
+                onSendMessage={(content) => handleSendMessage(content)}
+                isLoading={isLoading}
               />
             </div>
-          )}
-        </GamificationProvider>
+          </div>
+        )}
+
+        {/* Resources panel */}
+        <ResourcesPanel
+          resources={louisianaResources}
+          isOpen={showResources}
+          onClose={() => setShowResources(false)}
+        />
       </div>
 
       {/* Login Modal */}

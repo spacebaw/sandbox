@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import MagicCard from './MagicCard';
+import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 interface LandingPageProps {
-  onContinue: (businessType: string, city: string) => void;
+  onContinue: (businessType: string, city: string, initialQuery?: string) => void;
 }
 
 const goalButtons = [
@@ -18,8 +17,6 @@ const goalButtons = [
 
 export default function LandingPage({ onContinue }: LandingPageProps) {
   const [input, setInput] = useState('');
-  const [showMagicCard, setShowMagicCard] = useState(false);
-  const [parsedData, setParsedData] = useState<{ businessType: string; city: string } | null>(null);
 
   const parseInput = (text: string): { businessType: string; city: string } | null => {
     // Simple parsing logic - look for "a [business type] in [city]"
@@ -63,35 +60,29 @@ export default function LandingPage({ onContinue }: LandingPageProps) {
     if (input.trim()) {
       const parsed = parseInput(input);
       if (parsed) {
-        setParsedData(parsed);
-        setShowMagicCard(true);
+        // Skip magic card, go directly to chat with the query
+        onContinue(parsed.businessType, parsed.city, input);
       }
     }
   };
 
   const handleGoalClick = (prompt: string) => {
-    setInput(prompt);
-  };
-
-  const handleContinue = () => {
-    if (parsedData) {
-      onContinue(parsedData.businessType, parsedData.city);
+    // Clicking a goal button goes directly to chat with that prompt
+    const parsed = parseInput(prompt);
+    if (parsed) {
+      onContinue(parsed.businessType, parsed.city, prompt);
     }
   };
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center p-4">
       <div className="max-w-3xl w-full">
-        <AnimatePresence mode="wait">
-          {!showMagicCard ? (
-            <motion.div
-              key="input"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="text-center"
-            >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-center"
+        >
               {/* Logo orb */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
@@ -170,33 +161,16 @@ export default function LandingPage({ onContinue }: LandingPageProps) {
                 </div>
               </motion.form>
 
-              {/* Footer note */}
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.7 }}
-                className="mt-8 text-xs text-gray-400"
-              >
-                Louisiana Business Assistant can make mistakes. Please verify important information.
-              </motion.p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="magic-card"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              {parsedData && (
-                <MagicCard
-                  businessType={parsedData.businessType}
-                  city={parsedData.city}
-                  onContinue={handleContinue}
-                />
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+          {/* Footer note */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="mt-8 text-xs text-gray-400"
+          >
+            Louisiana Business Assistant can make mistakes. Please verify important information.
+          </motion.p>
+        </motion.div>
       </div>
     </div>
   );
