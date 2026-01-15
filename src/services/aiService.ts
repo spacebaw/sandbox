@@ -131,11 +131,11 @@ Remember: Your goal is to empower Louisiana small business owners with knowledge
 // Extract progress items from AI response and clean the message
 function extractProgressItemsAndClean(messageText: string): { cleanedMessage: string; progressItems: ProgressItem[] } {
   try {
-    // Look for PROGRESS_ITEMS: marker
-    const progressMarker = 'PROGRESS_ITEMS:';
-    const markerIndex = messageText.indexOf(progressMarker);
+    // Look for PROGRESS_ITEMS: or PROGRESS ITEMS: marker (case insensitive, with or without space)
+    const progressRegex = /PROGRESS[\s_]ITEMS:\s*/i;
+    const match = messageText.match(progressRegex);
 
-    if (markerIndex === -1) {
+    if (!match || match.index === undefined) {
       return {
         cleanedMessage: messageText,
         progressItems: []
@@ -143,10 +143,10 @@ function extractProgressItemsAndClean(messageText: string): { cleanedMessage: st
     }
 
     // Extract the message without the progress items section
-    const cleanedMessage = messageText.substring(0, markerIndex).trim();
+    const cleanedMessage = messageText.substring(0, match.index).trim();
 
     // Extract JSON after marker
-    const jsonStart = markerIndex + progressMarker.length;
+    const jsonStart = match.index + match[0].length;
     const jsonText = messageText.substring(jsonStart).trim();
 
     // Find the JSON array (between [ and ])
