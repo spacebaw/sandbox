@@ -69,11 +69,11 @@ export async function sendMessage(
     const data = await response.json();
     const messageText = data.message || 'I apologize, but I had trouble generating a response. Please try again.';
 
-    // Parse progress items from the response
-    const progressItems = extractProgressItems(messageText);
+    // Parse progress items from the response and clean the message
+    const { cleanedMessage, progressItems } = extractProgressItemsAndClean(messageText);
 
     return {
-      message: messageText,
+      message: cleanedMessage,
       progressItems
     };
 
@@ -128,16 +128,22 @@ PROGRESS_ITEMS:
 Remember: Your goal is to empower Louisiana small business owners with knowledge and confidence to succeed.`;
 }
 
-// Extract progress items from AI response
-function extractProgressItems(messageText: string): ProgressItem[] {
+// Extract progress items from AI response and clean the message
+function extractProgressItemsAndClean(messageText: string): { cleanedMessage: string; progressItems: ProgressItem[] } {
   try {
     // Look for PROGRESS_ITEMS: marker
     const progressMarker = 'PROGRESS_ITEMS:';
     const markerIndex = messageText.indexOf(progressMarker);
 
     if (markerIndex === -1) {
-      return [];
+      return {
+        cleanedMessage: messageText,
+        progressItems: []
+      };
     }
+
+    // Extract the message without the progress items section
+    const cleanedMessage = messageText.substring(0, markerIndex).trim();
 
     // Extract JSON after marker
     const jsonStart = markerIndex + progressMarker.length;
@@ -148,23 +154,34 @@ function extractProgressItems(messageText: string): ProgressItem[] {
     const arrayEnd = jsonText.lastIndexOf(']');
 
     if (arrayStart === -1 || arrayEnd === -1) {
-      return [];
+      return {
+        cleanedMessage,
+        progressItems: []
+      };
     }
 
     const jsonArray = jsonText.substring(arrayStart, arrayEnd + 1);
     const items = JSON.parse(jsonArray);
 
     // Convert to ProgressItem format with IDs and completed status
-    return items.map((item: any, index: number) => ({
+    const progressItems = items.map((item: any, index: number) => ({
       id: `progress-${Date.now()}-${index}`,
       title: item.title,
       description: item.description,
       completed: false,
       category: item.category
     }));
+
+    return {
+      cleanedMessage,
+      progressItems
+    };
   } catch (error) {
     console.error('Error parsing progress items:', error);
-    return [];
+    return {
+      cleanedMessage: messageText,
+      progressItems: []
+    };
   }
 }
 
@@ -189,9 +206,9 @@ function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswe
 - The Louisiana Small Business Development Center (LSBDC) offers free business plan assistance
 - SCORE Louisiana provides free mentoring from experienced business professionals
 
-Would you like me to dive deeper into any specific section of the business plan?
+Would you like me to dive deeper into any specific section of the business plan?`;
 
-*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+    // Note: In mock mode, we don't add the backend server note to keep it clean
 
     return {
       message,
@@ -222,9 +239,7 @@ Would you like me to dive deeper into any specific section of the business plan?
 - Crowdfunding platforms
 - Business incubators and accelerators in Louisiana
 
-The best option depends on your specific needs, business stage, and financial situation. Would you like more details on any of these?
-
-*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+The best option depends on your specific needs, business stage, and financial situation. Would you like more details on any of these?`;
 
     return {
       message,
@@ -257,9 +272,7 @@ The best option depends on your specific needs, business stage, and financial si
 - Louisiana Department of Revenue: https://revenue.louisiana.gov/
 - Your local city hall or parish clerk's office
 
-Each business is different, so I recommend checking with the Louisiana Small Business Development Center (LSBDC) for personalized guidance.
-
-*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+Each business is different, so I recommend checking with the Louisiana Small Business Development Center (LSBDC) for personalized guidance.`;
 
     return {
       message,
@@ -316,9 +329,7 @@ ${assessmentAnswers.stage === 'transition' ? `
 - Seek guidance from experienced mentors
 ` : ''}
 
-**Regarding "${assessmentAnswers.mainChallenge}":** This is a common challenge for businesses at your stage. I'd be happy to provide more specific guidance - could you tell me more about your specific situation?
-
-*Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+**Regarding "${assessmentAnswers.mainChallenge}":** This is a common challenge for businesses at your stage. I'd be happy to provide more specific guidance - could you tell me more about your specific situation?`;
 
   // Generate relevant progress items based on stage
   const progressItems: ProgressItem[] = [];
