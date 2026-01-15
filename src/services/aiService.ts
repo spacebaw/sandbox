@@ -1,4 +1,5 @@
 import { AssessmentAnswers, BusinessStage } from '../types';
+import { ProgressItem } from '../components/ProgressTracker';
 
 // Use relative URL in development (Vite proxy) or absolute URL in production
 const API_URL = import.meta.env.VITE_API_URL || '';
@@ -11,11 +12,16 @@ const stageDescriptions: Record<BusinessStage, string> = {
   transition: "making major changes, planning succession, or pivoting their business"
 };
 
+export interface AIResponse {
+  message: string;
+  progressItems: ProgressItem[];
+}
+
 export async function sendMessage(
   userMessage: string,
   conversationHistory: { role: 'user' | 'assistant'; content: string }[],
   assessmentAnswers: AssessmentAnswers
-): Promise<string> {
+): Promise<AIResponse> {
   try {
     // Build system prompt with Louisiana context and assessment info
     const systemPrompt = buildSystemPrompt(assessmentAnswers);
@@ -42,10 +48,16 @@ export async function sendMessage(
       const errorData = await response.json().catch(() => ({}));
 
       if (response.status === 401) {
-        return 'API Key Error: The API key configured on the server appears to be invalid. Please check the server/.env file.';
+        return {
+          message: 'API Key Error: The API key configured on the server appears to be invalid. Please check the server/.env file.',
+          progressItems: []
+        };
       }
       if (response.status === 429) {
-        return 'Rate Limit: API usage limits exceeded. Please wait a moment and try again.';
+        return {
+          message: 'Rate Limit: API usage limits exceeded. Please wait a moment and try again.',
+          progressItems: []
+        };
       }
       if (response.status === 500 && errorData.error?.includes('not configured')) {
         return getMockResponse(userMessage, assessmentAnswers);
@@ -55,7 +67,15 @@ export async function sendMessage(
     }
 
     const data = await response.json();
-    return data.message || 'I apologize, but I had trouble generating a response. Please try again.';
+    const messageText = data.message || 'I apologize, but I had trouble generating a response. Please try again.';
+
+    // Parse progress items from the response
+    const progressItems = extractProgressItems(messageText);
+
+    return {
+      message: messageText,
+      progressItems
+    };
 
   } catch (error: any) {
     console.error('Error calling backend API:', error);
@@ -66,7 +86,10 @@ export async function sendMessage(
       return getMockResponse(userMessage, assessmentAnswers);
     }
 
-    return `I apologize, but I encountered an error: ${error.message || 'Unknown error'}. Please make sure the backend server is running.`;
+    return {
+      message: `I apologize, but I encountered an error: ${error.message || 'Unknown error'}. Please make sure the backend server is running.`,
+      progressItems: []
+    };
   }
 }
 
@@ -92,16 +115,66 @@ Guidelines for your responses:
 9. For Louisiana-specific information, reference state agencies like Louisiana Economic Development, Louisiana Small Business Development Center (LSBDC), Louisiana Secretary of State, etc.
 10. If you don't know something specific to Louisiana, be honest and suggest where they can find that information
 
+**Progress Tracking:**
+At the end of your response, suggest 3-5 actionable next steps for the user based on your conversation. Format these as a JSON array at the very end of your message using this structure:
+
+PROGRESS_ITEMS:
+[{"title": "Action step title", "description": "Brief description of the step", "category": "Category name"}]
+
+For example:
+PROGRESS_ITEMS:
+[{"title": "Register your business", "description": "File with Louisiana Secretary of State", "category": "Legal Setup"}, {"title": "Get an EIN", "description": "Apply for tax ID from IRS", "category": "Legal Setup"}]
+
 Remember: Your goal is to empower Louisiana small business owners with knowledge and confidence to succeed.`;
 }
 
+// Extract progress items from AI response
+function extractProgressItems(messageText: string): ProgressItem[] {
+  try {
+    // Look for PROGRESS_ITEMS: marker
+    const progressMarker = 'PROGRESS_ITEMS:';
+    const markerIndex = messageText.indexOf(progressMarker);
+
+    if (markerIndex === -1) {
+      return [];
+    }
+
+    // Extract JSON after marker
+    const jsonStart = markerIndex + progressMarker.length;
+    const jsonText = messageText.substring(jsonStart).trim();
+
+    // Find the JSON array (between [ and ])
+    const arrayStart = jsonText.indexOf('[');
+    const arrayEnd = jsonText.lastIndexOf(']');
+
+    if (arrayStart === -1 || arrayEnd === -1) {
+      return [];
+    }
+
+    const jsonArray = jsonText.substring(arrayStart, arrayEnd + 1);
+    const items = JSON.parse(jsonArray);
+
+    // Convert to ProgressItem format with IDs and completed status
+    return items.map((item: any, index: number) => ({
+      id: `progress-${Date.now()}-${index}`,
+      title: item.title,
+      description: item.description,
+      completed: false,
+      category: item.category
+    }));
+  } catch (error) {
+    console.error('Error parsing progress items:', error);
+    return [];
+  }
+}
+
 // Mock response for when backend is not available
-function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswers): string {
+function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswers): AIResponse {
   const lowerMessage = userMessage.toLowerCase();
 
   // Simple keyword-based mock responses
   if (lowerMessage.includes('business plan')) {
-    return `Great question about business planning! Here's what I'd recommend:
+    const message = `Great question about business planning! Here's what I'd recommend:
 
 **Key Components of a Business Plan:**
 
@@ -119,10 +192,20 @@ function getMockResponse(userMessage: string, assessmentAnswers: AssessmentAnswe
 Would you like me to dive deeper into any specific section of the business plan?
 
 *Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+
+    return {
+      message,
+      progressItems: [
+        { id: 'mock-1', title: 'Write Executive Summary', description: 'Draft a brief overview of your business', completed: false, category: 'Business Planning' },
+        { id: 'mock-2', title: 'Research Louisiana Market', description: 'Analyze your target customers and competition', completed: false, category: 'Business Planning' },
+        { id: 'mock-3', title: 'Create Financial Projections', description: 'Estimate startup costs and revenue forecasts', completed: false, category: 'Business Planning' },
+        { id: 'mock-4', title: 'Contact LSBDC', description: 'Schedule a free consultation', completed: false, category: 'Resources' }
+      ]
+    };
   }
 
   if (lowerMessage.includes('funding') || lowerMessage.includes('loan') || lowerMessage.includes('money')) {
-    return `Let me help you explore funding options for your Louisiana business:
+    const message = `Let me help you explore funding options for your Louisiana business:
 
 **Louisiana-Specific Funding:**
 - **Louisiana Economic Development** offers various loan and grant programs
@@ -142,10 +225,19 @@ Would you like me to dive deeper into any specific section of the business plan?
 The best option depends on your specific needs, business stage, and financial situation. Would you like more details on any of these?
 
 *Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+
+    return {
+      message,
+      progressItems: [
+        { id: 'mock-1', title: 'Research LED programs', description: 'Explore Louisiana Economic Development funding', completed: false, category: 'Funding' },
+        { id: 'mock-2', title: 'Prepare financial documents', description: 'Gather tax returns, business plan, and financial statements', completed: false, category: 'Funding' },
+        { id: 'mock-3', title: 'Check SBA loan eligibility', description: 'Review requirements for SBA loans', completed: false, category: 'Funding' }
+      ]
+    };
   }
 
   if (lowerMessage.includes('license') || lowerMessage.includes('permit') || lowerMessage.includes('register')) {
-    return `Here's what you need to know about business registration and licensing in Louisiana:
+    const message = `Here's what you need to know about business registration and licensing in Louisiana:
 
 **Business Registration:**
 1. **Choose your business structure** (LLC, Corporation, Sole Proprietorship, etc.)
@@ -168,10 +260,20 @@ The best option depends on your specific needs, business stage, and financial si
 Each business is different, so I recommend checking with the Louisiana Small Business Development Center (LSBDC) for personalized guidance.
 
 *Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+
+    return {
+      message,
+      progressItems: [
+        { id: 'mock-1', title: 'Choose business structure', description: 'Decide on LLC, Corporation, or Sole Proprietorship', completed: false, category: 'Legal Setup' },
+        { id: 'mock-2', title: 'Register with Secretary of State', description: 'File business registration documents', completed: false, category: 'Legal Setup' },
+        { id: 'mock-3', title: 'Apply for EIN', description: 'Get tax ID from IRS', completed: false, category: 'Legal Setup' },
+        { id: 'mock-4', title: 'Get local business license', description: 'Apply at city hall or parish office', completed: false, category: 'Legal Setup' }
+      ]
+    };
   }
 
   // Generic helpful response
-  return `Thank you for your question! I'm here to help Louisiana small business owners like you succeed.
+  const message = `Thank you for your question! I'm here to help Louisiana small business owners like you succeed.
 
 **For your ${assessmentAnswers.industry || 'business'} at the ${assessmentAnswers.stage || 'current'} stage:**
 
@@ -217,4 +319,29 @@ ${assessmentAnswers.stage === 'transition' ? `
 **Regarding "${assessmentAnswers.mainChallenge}":** This is a common challenge for businesses at your stage. I'd be happy to provide more specific guidance - could you tell me more about your specific situation?
 
 *Note: Backend server not running. Start with 'npm start' for full AI-powered responses.*`;
+
+  // Generate relevant progress items based on stage
+  const progressItems: ProgressItem[] = [];
+
+  if (assessmentAnswers.stage === 'idea') {
+    progressItems.push(
+      { id: 'mock-1', title: 'Validate business idea', description: 'Talk to potential customers', completed: false, category: 'Planning' },
+      { id: 'mock-2', title: 'Research Louisiana market', description: 'Study competitors and demand', completed: false, category: 'Planning' },
+      { id: 'mock-3', title: 'Contact LSBDC', description: 'Schedule free consultation', completed: false, category: 'Resources' }
+    );
+  } else if (assessmentAnswers.stage === 'startup') {
+    progressItems.push(
+      { id: 'mock-1', title: 'Register business', description: 'File with Louisiana Secretary of State', completed: false, category: 'Legal' },
+      { id: 'mock-2', title: 'Get licenses and permits', description: 'Apply for required licenses', completed: false, category: 'Legal' },
+      { id: 'mock-3', title: 'Open business bank account', description: 'Separate business and personal finances', completed: false, category: 'Finance' }
+    );
+  } else {
+    progressItems.push(
+      { id: 'mock-1', title: 'Review current situation', description: 'Assess your business needs', completed: false, category: 'Planning' },
+      { id: 'mock-2', title: 'Set clear goals', description: 'Define what success looks like', completed: false, category: 'Planning' },
+      { id: 'mock-3', title: 'Create action plan', description: 'Outline next steps', completed: false, category: 'Planning' }
+    );
+  }
+
+  return { message, progressItems };
 }

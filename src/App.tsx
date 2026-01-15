@@ -5,6 +5,7 @@ import ChatInterface from './components/ChatInterface';
 import ResourcesPanel from './components/ResourcesPanel';
 import LoginModal from './components/LoginModal';
 import LeftSidebar from './components/LeftSidebar';
+import ProgressTracker, { ProgressItem } from './components/ProgressTracker';
 import { louisianaResources } from './data/resources';
 import { Message } from './types';
 import { sendMessage } from './services/aiService';
@@ -16,6 +17,7 @@ function AppContent() {
   const [appState, setAppState] = useState<AppState>('landing');
   const [businessInfo, setBusinessInfo] = useState<{ type: string; city: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [progressItems, setProgressItems] = useState<ProgressItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResources, setShowResources] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -83,17 +85,33 @@ function AppContent() {
         hasBusinessPlan: null
       };
 
-      // Get AI response
-      const responseText = await sendMessage(content, conversationHistory, assessmentAnswers);
+      // Get AI response with progress items
+      const response = await sendMessage(content, conversationHistory, assessmentAnswers);
 
       // Add assistant message
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: responseText,
+        content: response.message,
         timestamp: new Date()
       };
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Update progress items - merge new items with existing ones
+      if (response.progressItems.length > 0) {
+        setProgressItems(prev => {
+          // Create a map of existing items by title to avoid duplicates
+          const existingMap = new Map(prev.map(item => [item.title.toLowerCase(), item]));
+
+          // Add new items that don't exist yet
+          const newItems = response.progressItems.filter(
+            item => !existingMap.has(item.title.toLowerCase())
+          );
+
+          return [...prev, ...newItems];
+        });
+      }
+
       incrementInteractions(); // Track interaction
     } catch (error) {
       console.error('Error sending message:', error);
@@ -109,11 +127,20 @@ function AppContent() {
     }
   };
 
+  const handleToggleProgress = (id: string) => {
+    setProgressItems(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, completed: !item.completed } : item
+      )
+    );
+  };
+
   const handleReset = () => {
     if (confirm('Are you sure you want to start over?')) {
       setAppState('landing');
       setBusinessInfo(null);
       setMessages([]);
+      setProgressItems([]);
       setShowResources(false);
     }
   };
@@ -162,13 +189,23 @@ function AppContent() {
               </div>
             </div>
 
-            {/* Chat interface */}
-            <div className="flex-1">
-              <ChatInterface
-                messages={messages}
-                onSendMessage={(content) => handleSendMessage(content)}
-                isLoading={isLoading}
-              />
+            {/* Chat interface with progress tracker */}
+            <div className="flex-1 flex overflow-hidden">
+              <div className="flex-1">
+                <ChatInterface
+                  messages={messages}
+                  onSendMessage={(content) => handleSendMessage(content)}
+                  isLoading={isLoading}
+                />
+              </div>
+              {/* Progress tracker sidebar */}
+              <div className="w-80 border-l border-gray-200 bg-white hidden lg:block">
+                <ProgressTracker
+                  items={progressItems}
+                  onToggle={handleToggleProgress}
+                  title="Your Action Items"
+                />
+              </div>
             </div>
           </div>
         )}
