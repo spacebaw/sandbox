@@ -1,22 +1,45 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
       colors: {
-        'primary': '#1976D2',      // Material Blue
-        'primary-dark': '#1565C0',
-        'primary-light': '#BBDEFB',
-        'accent': '#FF6F00',       // Material Orange
-        'accent-light': '#FFE0B2',
+        'navy': {
+          DEFAULT: '#040F49',
+          dark: '#020826',
+          light: '#0A1A6E',
+        },
+        'teal': {
+          DEFAULT: '#00BFA6',
+          dark: '#009580',
+          light: '#33CCBA',
+        },
+        'slate': {
+          DEFAULT: '#0A2F30',
+          dark: '#051819',
+          light: '#154748',
+        },
       },
-      boxShadow: {
-        'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-        'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-        'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      animation: {
+        'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
+        'slide-in': 'slideIn 0.6s ease-out forwards',
+      },
+      keyframes: {
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(20px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideIn: {
+          '0%': { opacity: '0', transform: 'translateX(-20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
       },
     },
   },
