@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Welcome from './components/Welcome';
+import HomePage from './components/HomePage';
 import Assessment from './components/Assessment';
 import ChatInterface from './components/ChatInterface';
 import PromptOptions from './components/PromptOptions';
@@ -8,7 +8,7 @@ import { AssessmentAnswers, Message } from './types';
 import { promptOptionsByStage } from './data/promptOptions';
 import { louisianaResources } from './data/resources';
 import { sendMessage } from './services/aiService';
-import { BookOpen, RotateCcw } from 'lucide-react';
+import { BookOpen, RotateCcw, Zap } from 'lucide-react';
 
 type AppState = 'welcome' | 'assessment' | 'chat';
 
@@ -95,12 +95,56 @@ function App() {
     }
   };
 
+  // Render function for fixed header
+  const renderHeader = () => (
+    <header className="fixed top-0 left-0 right-0 bg-navy border-b border-teal/20 shadow-industrial-lg z-50">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <Zap className="w-8 h-8 text-teal" />
+          <h1 className="font-inter font-bold text-2xl text-white">Louisiana Innovation Labs</h1>
+        </div>
+        {appState !== 'welcome' && (
+          <div className="flex space-x-3">
+            {appState === 'chat' && (
+              <button
+                onClick={() => setShowResources(true)}
+                className="bg-teal hover:bg-teal/90 text-navy font-inter font-semibold px-4 py-2 rounded-lg transition-all shadow-industrial flex items-center space-x-2"
+              >
+                <BookOpen className="w-5 h-5" />
+                <span>Resources</span>
+              </button>
+            )}
+            <button
+              onClick={handleReset}
+              className="bg-navy hover:bg-navy/80 text-white border border-teal/30 font-inter font-semibold px-4 py-2 rounded-lg transition-all shadow-industrial flex items-center space-x-2"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Start Over</span>
+            </button>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+
   if (appState === 'welcome') {
-    return <Welcome onGetStarted={handleGetStarted} />;
+    return (
+      <div className="min-h-screen">
+        {renderHeader()}
+        <HomePage onGetStarted={handleGetStarted} />
+      </div>
+    );
   }
 
   if (appState === 'assessment') {
-    return <Assessment onComplete={handleAssessmentComplete} />;
+    return (
+      <div className="min-h-screen bg-slate">
+        {renderHeader()}
+        <div className="pt-20">
+          <Assessment onComplete={handleAssessmentComplete} />
+        </div>
+      </div>
+    );
   }
 
   // Chat view
@@ -109,52 +153,24 @@ function App() {
     : [];
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-slate">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-material-1">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Louisiana Business Assistant</h1>
-            <p className="text-gray-600 text-sm">
-              {assessmentAnswers?.stage && (
-                <>Stage: {assessmentAnswers.stage.charAt(0).toUpperCase() + assessmentAnswers.stage.slice(1)}</>
-              )}
-              {assessmentAnswers?.industry && <> • {assessmentAnswers.industry}</>}
-            </p>
-          </div>
-          <div className="flex space-x-2">
-            <button
-              onClick={() => setShowResources(true)}
-              className="bg-accent hover:bg-orange-600 text-white font-semibold px-4 py-2 rounded-lg transition-all shadow-material-1 hover:shadow-material-2 flex items-center space-x-2"
-            >
-              <BookOpen className="w-5 h-5" />
-              <span>Resources</span>
-            </button>
-            <button
-              onClick={handleReset}
-              className="bg-white hover:bg-gray-50 text-gray-700 font-semibold px-4 py-2 rounded-lg transition-all border border-gray-300 shadow-material-1 hover:shadow-material-2 flex items-center space-x-2"
-            >
-              <RotateCcw className="w-4 h-4" />
-              <span>Start Over</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      {renderHeader()}
 
-      {/* Main content */}
-      <div className="flex-1 overflow-hidden bg-gray-50">
+      {/* Main content with padding for fixed header */}
+      <div className="flex-1 overflow-hidden bg-slate pt-20">
         <div className="max-w-7xl mx-auto h-full flex flex-col lg:flex-row">
           {/* Left sidebar - Prompt options (hidden on mobile when there are messages) */}
-          <div className={`lg:w-96 bg-white border-r border-gray-200 p-4 overflow-y-auto ${messages.length > 1 ? 'hidden lg:block' : ''}`}>
+          <div className={`lg:w-96 bg-navy/40 border-r border-teal/20 p-4 overflow-y-auto ${messages.length > 1 ? 'hidden lg:block' : ''}`}>
             <PromptOptions
               options={promptOptions}
               onSelectPrompt={handleSelectPrompt}
             />
 
             {/* Quick tips */}
-            <div className="mt-6 bg-primary-light rounded-lg p-4 border border-primary/20">
-              <h4 className="font-semibold text-primary-dark mb-2">💡 Quick Tips</h4>
-              <ul className="text-sm text-gray-700 space-y-2">
+            <div className="mt-6 bg-teal/10 rounded-lg p-4 border border-teal/30">
+              <h4 className="font-inter font-semibold text-teal mb-2">💡 Quick Tips</h4>
+              <ul className="text-sm text-white/80 font-inter space-y-2">
                 <li>• Ask questions in your own words</li>
                 <li>• Be specific about your situation</li>
                 <li>• Request examples or clarification anytime</li>
@@ -164,7 +180,7 @@ function App() {
           </div>
 
           {/* Chat area */}
-          <div className="flex-1 flex flex-col bg-gray-50">
+          <div className="flex-1 flex flex-col bg-slate">
             <ChatInterface
               messages={messages}
               onSendMessage={handleSendMessage}

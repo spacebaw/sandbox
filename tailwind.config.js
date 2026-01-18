@@ -7,16 +7,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        'primary': '#1976D2',      // Material Blue
-        'primary-dark': '#1565C0',
-        'primary-light': '#BBDEFB',
-        'accent': '#FF6F00',       // Material Orange
-        'accent-light': '#FFE0B2',
+        'navy': '#040F49',         // Industrial Executive Navy (Primary)
+        'teal': '#00BFA6',         // Industrial Executive Teal (Accent)
+        'slate': '#0A2F30',        // Industrial Executive Slate (Background)
+        'primary': '#040F49',
+        'accent': '#00BFA6',
+      },
+      fontFamily: {
+        'inter': ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'material-1': '0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24)',
-        'material-2': '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
-        'material-3': '0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23)',
+        'industrial': '0 4px 12px rgba(4, 15, 73, 0.15)',
+        'industrial-lg': '0 10px 30px rgba(4, 15, 73, 0.25)',
+      },
+      animation: {
+        'tighten': 'tighten 1.2s ease-out forwards',
+      },
+      keyframes: {
+        tighten: {
+          '0%': {
+            opacity: '0',
+            letterSpacing: '0.1em',
+          },
+          '100%': {
+            opacity: '1',
+            letterSpacing: '-0.02em',
+          },
+        },
       },
     },
   },
